@@ -1,4 +1,24 @@
 data*/
 venv*/
 log.txt
+
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+
+app/data/raw/
+app/database/nba.db
+
+treed.txt
+
+*.log
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+*.egg
+*.dist-info/
+
 !.gitignore
