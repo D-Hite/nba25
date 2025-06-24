@@ -1,8 +1,5 @@
-MODEL (
-                    name customer1.some_table,
-                    kind FULL
-                    );
-                    
+CREATE OR REPLACE TABLE base.teams_combined AS
+
             SELECT DISTINCT
             
 	COALESCE(CAST(raw.log_table.GAME_ID AS VARCHAR),CAST(raw.teams_fourfactors.GAME_ID AS VARCHAR),CAST(raw.lines_table.GAME_ID AS VARCHAR),CAST(raw.teams_advanced.GAME_ID AS VARCHAR),CAST(raw.teams_misc.GAME_ID AS VARCHAR),CAST(raw.teams_scoring.GAME_ID AS VARCHAR),CAST(raw.teams_traditional.GAME_ID AS VARCHAR)) as GAME_ID,
@@ -92,8 +89,8 @@ MODEL (
 	raw.teams_traditional.TO,
         FROM raw.log_table
 left join raw.teams_advanced on raw.log_table.GAME_ID::int = raw.teams_advanced.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_advanced.TEAM_ABBREVIATION
-left join raw.teams_scoring on raw.log_table.GAME_ID::int = raw.teams_scoring.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_scoring.TEAM_ABBREVIATION
-left join raw.lines_table on raw.log_table.GAME_ID::int = raw.lines_table.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.lines_table.TEAM_ABBREVIATION
-left join raw.teams_misc on raw.log_table.GAME_ID::int = raw.teams_misc.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_misc.TEAM_ABBREVIATION
-left join raw.teams_traditional on raw.log_table.GAME_ID::int = raw.teams_traditional.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_traditional.TEAM_ABBREVIATION
 left join raw.teams_fourfactors on raw.log_table.GAME_ID::int = raw.teams_fourfactors.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_fourfactors.TEAM_ABBREVIATION
+left join raw.teams_traditional on raw.log_table.GAME_ID::int = raw.teams_traditional.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_traditional.TEAM_ABBREVIATION
+left join raw.teams_scoring on raw.log_table.GAME_ID::int = raw.teams_scoring.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_scoring.TEAM_ABBREVIATION
+left join raw.teams_misc on raw.log_table.GAME_ID::int = raw.teams_misc.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.teams_misc.TEAM_ABBREVIATION
+left join raw.lines_table on raw.log_table.GAME_ID::int = raw.lines_table.GAME_ID::int and raw.log_table.TEAM_ABBREVIATION = raw.lines_table.TEAM_ABBREVIATION

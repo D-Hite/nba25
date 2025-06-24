@@ -14,12 +14,11 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 # Your data path inside the 'collection' directory
 DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
 DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
-
-
 SQLMESH_PATH = os.path.join(BASE_PATH, 'app', 'sqlmesh')
+SQL_PATH = os.path.join(BASE_PATH, 'app', 'sql','sql')
+
+
 # print(f"Data Path: {SQLMESH_PATH}")
-
-
 # Just a check to confirm paths
 # print(f"Base Path: {BASE_PATH}")
 # print(f"Data Path: {DATA_PATH}")
@@ -41,11 +40,30 @@ class SQLGenerator():
     def __init__(self, logger):
         self.logger = logger
         self.conn = duckdb.connect(f'{DATABASE_PATH}/nba.db')
+    
 
-    def write_sql(self, sql):
-        with open('first.sql','w') as f:
-            for i in sql:
-                f.write(i+'\n')
+    def schema_exists(self, schema_name):
+        """Check if a schema exists using information_schema."""
+        result = self.conn.execute(f"""
+            SELECT schema_name
+            FROM information_schema.schemata
+            WHERE schema_name = '{schema_name}'
+        """).fetchall()
+        return len(result) > 0
+
+    def write_sql(self, schema, name, sql):
+        schema_dir = os.path.join(SQL_PATH, schema)
+        os.makedirs(schema_dir, exist_ok=True)
+        if not self.schema_exists(schema):
+            self.logger.log_info(f'CREATING NEW SCHEMA: {schema}')
+            self.conn.execute(f"""
+                CREATE SCHEMA {schema};
+                """).df()
+        self.logger.log_info(f'writing new table {schema}.{name}')
+        with open(os.path.join(SQL_PATH, schema, name+'.sql'), 'w') as f:
+            f.write(f"""CREATE OR REPLACE TABLE {schema}.{name} AS\n{sql}""")
+            self.conn.execute(f"""CREATE OR REPLACE TABLE {schema}.{name} AS\n{sql}""")
+
 
     def make_sql_model(self,schema,name,sql,kind='FULL'):
         schema_dir = os.path.join(SQLMESH_PATH, 'models', schema)
@@ -56,10 +74,6 @@ class SQLGenerator():
                     kind FULL
                     );
                     {sql}""")
-
-
-
-
 
 
 
@@ -185,37 +199,21 @@ class CombinedGenerator(SQLGenerator):
 
         players_dict = self.get_column_sources(playerandlog_columns)
         player_sql = self.sql_create_player_combination(players_dict)
-        # self.conn.execute(player_sql).df()
-        # self.sql_create_player_combination = player_sql
 
         team_dict = self.get_column_sources(teamandlog_columns)
         team_sql = self.sql_create_team_combination(team_dict)
 
-
-
         return {'teams_combined':team_sql,'players_combined':player_sql}
-        # self.conn.execute(team_sql).df()
-        # self.sql_create_team_combination = team_sql
 
-        # with open('./out/sql/creationsql.sql','w') as f1:
-        #     f1.write(f"TEAMS:\n{self.sql_create_team_combination}\n\n")
-        #     f1.write(f"PLAYERS:\n{self.sql_create_player_combination}\n\n")
-        # print("create_team_and_player_tables: DONE")
 
 
 def main():
-    # logger = Logger()
-    # x = CombinedGenerator(logger)
-    # sql = x.generate_sql()
-    # for model_name in sql:
-    #     x.make_sql_model('raw',model_name,sql[model_name],kind='FULL')
-
-    conn = duckdb.connect(f'{DATABASE_PATH}/nba.db')
-    print(conn.query('select * from information_schema.tables').df())
-
+    logger = Logger()
+    x = CombinedGenerator(logger)
+    sql = x.generate_sql()
+    for model_name in sql:
+        x.write_sql('base',model_name,sql[model_name])
         
-
-
 
 if __name__ == "__main__":
     main()
