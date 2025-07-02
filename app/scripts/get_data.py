@@ -1,5 +1,6 @@
 import nba_api.stats.endpoints as ep
 import pandas as pd
+import duckdb
 import random
 import time
 import logging
@@ -14,7 +15,9 @@ from ..utils.logger import Logger
 
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-
+# Your data path inside the 'collection' directory
+DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
+DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
 
 
 class DataFetcher:
@@ -61,7 +64,7 @@ class DataFetcher:
 
                 # If we successfully fetched the data, write it to CSV
                 if writer:
-                    writer.write_data(endpoint_name, teams, players)
+                    writer.write_data(endpoint_name, teams, players, duckdb=True)
 
                 return players, teams
 
@@ -93,40 +96,76 @@ class DataWriter:
         self.data_path = 'app/data/raw'
         self.logger=logger
 
-    def write_data(self, endpoint_name, tstats, pstats):
+    def write_to_duckdb(self,endpoint_name,tstats,pstats):
+        self.logger.log_info(f"attempting to insert {len(tstats) / 2} games into duckdb")
         try:
-            # Sort the dataframes
-            # tstats.sort_values('TEAM_ID', inplace=True, kind='mergesort')
-            # tstats.sort_values('GAME_ID', inplace=True, kind='mergesort')
-            # pstats.sort_values('TEAM_ID', inplace=True, kind='mergesort')
-            # pstats.sort_values('GAME_ID', inplace=True, kind='mergesort')
+            ###
+            conn = duckdb.connect(f'{DATABASE_PATH}/nba.db')
+
+            team_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'teams_{endpoint_name}'").fetchall()
+            player_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'players_{endpoint_name}'").fetchall()
 
 
+
+            if team_table_exist[0][0]:
+                conn.execute(f"""INSERT OR REPLACE INTO raw.teams_{endpoint_name} SELECT * FROM tstats""")
+            else:
+                self.logger.log_warning(f"duckdb insert: no table found for: raw.teams_{endpoint_name}")
+            if player_table_exist[0][0]:
+                conn.execute(f"""INSERT OR REPLACE INTO raw.players_{endpoint_name} SELECT * FROM pstats""")
+            else:
+                self.logger.log_warning(f"duckdb insert: no table found for raw.players_{endpoint_name}")
+
+            conn.close()
+        except Exception as e:
+            self.logger.log_error(f"Attemping to insert into duckdb for {endpoint_name}, {e}")
+            conn.close()
+
+    def write_data(self, endpoint_name, tstats, pstats, duckdb=False):
+        try:
             # Check if files already exist, and if they do, append the data
             team_file = f'{BASE_PATH}/{self.data_path}/teams/{endpoint_name}/{endpoint_name}{self.season}.csv'
             player_file = f'{BASE_PATH}/{self.data_path}/players/{endpoint_name}/{endpoint_name}{self.season}.csv'
             ## ensure location exists
             os.makedirs(os.path.dirname(team_file), exist_ok=True)
+            os.makedirs(os.path.dirname(player_file), exist_ok=True)
 
             self.logger.log_info(f"attempting to write {len(tstats) / 2} games")
 
-
-            # Append if files exist, otherwise create new
+            # Append team if files exist, otherwise create new
             mode = 'a' if os.path.exists(team_file) else 'w'
             header = not os.path.exists(team_file)
+            if mode == 'w':
+                filtered_tstats = tstats
+            else:
+                current_tstats = pd.read_csv(team_file, usecols=['GAME_ID','TEAM_ID'], dtype={'GAME_ID': str,'TEAM_ID':int})
+                filtered_tstats = tstats[~tstats[['GAME_ID', 'TEAM_ID']].apply(tuple, 1).isin(current_tstats[['GAME_ID', 'TEAM_ID']].apply(tuple, 1))]
+            filtered_tstats.to_csv(team_file, mode=mode, header=header, index=False)
 
-            tstats.to_csv(team_file, mode=mode, header=header, index=False)
-            pstats.to_csv(player_file, mode=mode, header=header, index=False)
-
+            # Append player if files exist, otherwise create new
+            mode = 'a' if os.path.exists(player_file) else 'w'
+            header = not os.path.exists(player_file)
+            if mode == 'w':
+                filtered_pstats = pstats
+            else:
+                current_pstats = pd.read_csv(player_file, usecols=['GAME_ID','TEAM_ID','PLAYER_ID'], dtype={'GAME_ID': str,'TEAM_ID':int,'PLAYER_ID':int})
+                filtered_pstats = pstats[~pstats[['GAME_ID', 'TEAM_ID','PLAYER_ID']].apply(tuple, 1).isin(current_pstats[['GAME_ID', 'TEAM_ID','PLAYER_ID']].apply(tuple, 1))]
+            filtered_pstats.to_csv(player_file, mode=mode, header=header, index=False)
+            
             self.logger.log_info(f"Data written for {endpoint_name} - {self.season}")
 
+            if duckdb:
+                ### maybe input filtered stats?
+                self.write_to_duckdb(endpoint_name,tstats,pstats)
+
         except Exception as e:
-            print(f"Error while writing data for {endpoint_name}: {e}")
+            self.logger.log_error(f"UNABLE TO WRITE DATA FOR {endpoint_name} - {self.season}, ERROR: {e}")
 
 
 class DataChecker:
-    def __init__(self, season, data_path='app/data/raw'):
+    def __init__(self, season, logger, data_path='app/data/raw'):
         self.season = season
+        self.logger = logger
         self.data_path = data_path
 
     def get_processed_games(self, endpoint_name):
@@ -143,22 +182,22 @@ class DataChecker:
         if os.path.exists(player_file):
             try:
                 # Read the player stats CSV
-                pstats = pd.read_csv(player_file, dtype={'GAME_ID': str})
+                pstats = pd.read_csv(player_file, usecols=['GAME_ID'], dtype={'GAME_ID': str})
                 # Normalize GAME_ID with leading zeros and add to player_games set
                 player_games.update(pstats['GAME_ID'].apply(lambda x: x.zfill(10)))
             except Exception as e:
-                print(f"Error reading player stats file: {e}")
+                self.logger.log_error(f"Error reading player stats file {endpoint_name}_{self.season}: {e}")
 
         # Check if the team stats file exists
         team_file = os.path.join(BASE_PATH, self.data_path, 'teams', endpoint_name, f'{endpoint_name}{self.season}.csv')
         if os.path.exists(team_file):
             try:
                 # Read the team stats CSV
-                tstats = pd.read_csv(team_file, dtype={'GAME_ID': str})
+                tstats = pd.read_csv(team_file, usecols=['GAME_ID'], dtype={'GAME_ID': str})
                 # Normalize GAME_ID with leading zeros and add to team_games set
                 team_games.update(tstats['GAME_ID'].apply(lambda x: x.zfill(10)))
             except Exception as e:
-                print(f"Error reading team stats file: {e}")
+                self.logger.log_error(f"Error reading team stats file {endpoint_name}_{self.season}: {e}")
         
         # Return the intersection of player_games and team_games
         return player_games & team_games  # Intersection of both sets
@@ -196,7 +235,7 @@ def update_log(season,logger,log=pd.DataFrame()):
 
 
 def check_data():
-    SEASONS = ['2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
+    SEASONS = ['2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
                ,'2020-21','2021-22','2022-23','2023-24','2024-25']
     ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
     logger = Logger()
@@ -212,7 +251,7 @@ def check_data():
         update_log(season,logger,log)
 
         # Data checker for existing files
-        checker = DataChecker(season)
+        checker = DataChecker(season,logger)
 
         # Process data for each endpoint
         for endpoint in ENDPOINTS:
@@ -225,8 +264,10 @@ def check_data():
 
                 
 def main():
-    SEASONS = ['2024-25']
-    ENDPOINTS = ['traditional']
+    SEASONS = ['2023-24']
+    # SEASONS = ['2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
+    #            ,'2020-21','2021-22','2022-23','2023-24','2024-25']
+    ENDPOINTS = ['traditional','fourfactors','advanced','misc','scoring']
 
     # Initialize logger
     logger = Logger()
@@ -240,11 +281,12 @@ def main():
         log = data_fetcher.fetch_log()
 
         # Data checker for existing files
-        checker = DataChecker(season)
+        checker = DataChecker(season, logger)
 
         # Process data for each endpoint
         for endpoint in ENDPOINTS:
             missing_gids = data_fetcher.gidset - checker.get_processed_games(endpoint)
+            empties = []
             
             if missing_gids:
                 writer = DataWriter(season,logger)
@@ -258,6 +300,10 @@ def main():
                     pstats, tstats = data_fetcher.fetch_game_data(endpoint, gid)
 
                     if pstats is not None and tstats is not None:
+                        if pstats.empty or tstats.empty:
+                            # logger.log_info(f"EMPTY GAME: {gid}")
+                            empties.append(gid)
+                            continue
                         pstats_buffer.append(pstats)
                         tstats_buffer.append(tstats)
                         count += 1
@@ -269,17 +315,22 @@ def main():
                         buffers+=1
                         # logger.log_info(f"Writing {count} games to disk...")
                         logger.log_info(f" {buffers*100}/{len(missing_gids)} game collection attempts")
-                        writer.write_data(endpoint, pd.concat(tstats_buffer), pd.concat(pstats_buffer))
+                        writer.write_data(endpoint, pd.concat(tstats_buffer), pd.concat(pstats_buffer), duckdb=True)
+                        ## TODO: also udate duckdb database
                         pstats_buffer = []
                         tstats_buffer = []
                         count = 0
                         
                 if len(pstats_buffer):
                         # logger.log_info(f"Writing remaining {count} games to disk...")
-                        logger.log_info(f" {count+buffers*100}/{len(missing_gids)} games collected")
-                        writer.write_data(endpoint, pd.concat(tstats_buffer), pd.concat(pstats_buffer))
+                        logger.log_info(f" {count+buffers*100}/{len(missing_gids)} games collected, {len(tstats_buffer)} games")
+                        writer.write_data(endpoint, pd.concat(tstats_buffer), pd.concat(pstats_buffer), duckdb=True)
+                else:
+                    logger.log_info(f"EMPTY DATAFRAMES FOR {endpoint}: {empties}")
+                if len(empties):
+                    logger.log_warning(f"{len(empties)} EMPTY GAMES")
                 
-
+                
             else:
                 logger.log_info(f"All data already present for {endpoint}{season}.csv")
 

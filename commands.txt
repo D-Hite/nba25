@@ -1,0 +1,1 @@
+sqlmesh --gateway duckdb create_external_models

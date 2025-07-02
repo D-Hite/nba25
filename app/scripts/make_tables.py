@@ -10,7 +10,7 @@ from ..utils.logger import Logger
 # Define the base path relative to the project root
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-# Your data path inside the 'collection' directory
+# Your data path
 DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
 DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
 
