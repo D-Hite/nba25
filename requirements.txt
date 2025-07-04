@@ -1,4 +1,4 @@
 duckdb
 pandas
 nba_api
-sqlmesh[web]
+sqlmesh

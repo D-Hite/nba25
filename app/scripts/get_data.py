@@ -156,7 +156,11 @@ class DataWriter:
 
             if duckdb:
                 ### maybe input filtered stats?
-                self.write_to_duckdb(endpoint_name,tstats,pstats)
+                try:
+                    self.write_to_duckdb(endpoint_name,tstats,pstats)
+                except Exception as e:
+                    self.logger.log_error(f"problem with  write_to_duckdb{endpoint_name} - {self.season}, ERROR: {e}")
+
 
         except Exception as e:
             self.logger.log_error(f"UNABLE TO WRITE DATA FOR {endpoint_name} - {self.season}, ERROR: {e}")
@@ -235,7 +239,7 @@ def update_log(season,logger,log=pd.DataFrame()):
 
 
 def check_data():
-    SEASONS = ['2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
+    SEASONS = ['2008-09','2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
                ,'2020-21','2021-22','2022-23','2023-24','2024-25']
     ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
     logger = Logger()
@@ -265,8 +269,8 @@ def check_data():
                 
 def main():
     SEASONS = ['2023-24']
-    # SEASONS = ['2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
-    #            ,'2020-21','2021-22','2022-23','2023-24','2024-25']
+    SEASONS = ['2008-09','2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
+               ,'2020-21','2021-22','2022-23','2023-24','2024-25']
     ENDPOINTS = ['traditional','fourfactors','advanced','misc','scoring']
 
     # Initialize logger
