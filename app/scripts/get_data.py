@@ -95,6 +95,7 @@ class DataWriter:
         self.season = season
         self.data_path = 'app/data/raw'
         self.logger=logger
+        self.sql_logger = Logger('sql.log')
 
     def write_to_duckdb(self,endpoint_name,tstats,pstats):
         self.logger.log_info(f"attempting to insert {len(tstats) / 2} games into duckdb")
@@ -108,11 +109,15 @@ class DataWriter:
 
 
             if team_table_exist[0][0]:
-                conn.execute(f"""INSERT OR REPLACE INTO raw.teams_{endpoint_name} SELECT * FROM tstats""")
+                insert_statement = f"""INSERT OR REPLACE INTO raw.teams_{endpoint_name} SELECT * FROM tstats"""
+                conn.execute(insert_statement)
+                self.sql_logger.log_info(insert_statement)
             else:
                 self.logger.log_warning(f"duckdb insert: no table found for: raw.teams_{endpoint_name}")
             if player_table_exist[0][0]:
-                conn.execute(f"""INSERT OR REPLACE INTO raw.players_{endpoint_name} SELECT * FROM pstats""")
+                insert_statement = f"""INSERT OR REPLACE INTO raw.players_{endpoint_name} SELECT * FROM pstats"""
+                conn.execute(insert_statement)
+                self.sql_logger.log_info(insert_statement)
             else:
                 self.logger.log_warning(f"duckdb insert: no table found for raw.players_{endpoint_name}")
 

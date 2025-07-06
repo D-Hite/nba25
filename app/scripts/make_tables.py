@@ -45,6 +45,7 @@ class TableGenerator:
         self.endpoints = self.get_endpoints()
         self.tables_to_create = self.get_table_paths()
         self.logger = logger
+        self.sql_logger = Logger('sql.log')
 
     def get_endpoints(self):
         """Fetch common endpoints from both teams and players directories."""
@@ -73,11 +74,13 @@ class TableGenerator:
 
     def schema_exists(self, schema_name):
         """Check if a schema exists using information_schema."""
-        result = self.conn.execute(f"""
+        message = f"""
             SELECT schema_name
             FROM information_schema.schemata
             WHERE schema_name = '{schema_name}'
-        """).fetchall()
+        """
+        result = self.conn.execute(message).fetchall()
+        self.sql_logger.log_info(message)
         return len(result) > 0
 
     def create_table_from_csv(self, current_data_path):
@@ -113,7 +116,11 @@ class TableGenerator:
         try:
             # Execute table creation and insertion
             self.conn.execute(table_creation_statement)
+            self.sql_logger.log_info(table_creation_statement)
+
             self.conn.execute(insert_statement)
+            self.sql_logger.log_info(insert_statement)
+
 
             self.logger.log_info(f"Successfully created and populated {full_table_name} with {len(csv_files)} files.")
         except Exception as e:
