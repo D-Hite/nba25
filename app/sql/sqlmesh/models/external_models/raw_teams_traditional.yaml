@@ -1,0 +1,31 @@
+- name: '"nba"."raw"."teams_traditional"'
+  primary_key:
+    - GAME_ID
+    - TEAM_ID
+  columns:
+    GAME_ID: BIGINT
+    TEAM_ID: BIGINT
+    TEAM_NAME: TEXT
+    TEAM_ABBREVIATION: TEXT
+    TEAM_CITY: TEXT
+    MIN: TEXT
+    FGM: BIGINT
+    FGA: BIGINT
+    FG_PCT: DOUBLE
+    FG3M: BIGINT
+    FG3A: BIGINT
+    FG3_PCT: DOUBLE
+    FTM: BIGINT
+    FTA: BIGINT
+    FT_PCT: DOUBLE
+    OREB: BIGINT
+    DREB: BIGINT
+    REB: BIGINT
+    AST: BIGINT
+    STL: BIGINT
+    BLK: BIGINT
+    TO: BIGINT
+    PF: BIGINT
+    PTS: BIGINT
+    PLUS_MINUS: DOUBLE
+  gateway: duckdb

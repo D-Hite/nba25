@@ -1,0 +1,20 @@
+- name: '"nba"."raw"."teams_fourfactors"'
+  primary_key:
+    - GAME_ID
+    - TEAM_ID
+  columns:
+    GAME_ID: BIGINT
+    TEAM_ID: BIGINT
+    TEAM_NAME: TEXT
+    TEAM_ABBREVIATION: TEXT
+    TEAM_CITY: TEXT
+    MIN: TEXT
+    EFG_PCT: DOUBLE
+    FTA_RATE: DOUBLE
+    TM_TOV_PCT: DOUBLE
+    OREB_PCT: DOUBLE
+    OPP_EFG_PCT: DOUBLE
+    OPP_FTA_RATE: DOUBLE
+    OPP_TOV_PCT: DOUBLE
+    OPP_OREB_PCT: DOUBLE
+  gateway: duckdb

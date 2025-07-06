@@ -1,0 +1,11 @@
+- name: '"nba"."raw"."lines_table"'
+  primary_key:
+    - GAME_ID
+    - TEAM_ABBREVIATION
+  columns:
+    GAME_ID: BIGINT
+    GAME_DATE: DATE
+    TEAM_ABBREVIATION: TEXT
+    LINE: DOUBLE
+    OU: DOUBLE
+  gateway: duckdb

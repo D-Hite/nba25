@@ -29,6 +29,11 @@ DATA_TYPE_MAPPINGS = {'int64':'BIGINT',
                       'object':'TEXT',
                       'float64':'DOUBLE'}
 
+PRIMARY_KEYS = {'players':('GAME_ID', 'PLAYER_ID'),
+                'teams':('GAME_ID', 'TEAM_ID'),
+                'log':('GAME_ID', 'TEAM_ID'),
+                'lines':('GAME_ID', 'TEAM_ABBREVIATION')}
+
 
 
 class TableGenerator():
@@ -53,12 +58,11 @@ class TableGenerator():
         table_paths = []
         for ep in self.endpoints:
             table_paths.append(f'{DATA_PATH}/teams/{ep}/')
+        for ep in self.endpoints:
+            table_paths.append(f'{DATA_PATH}/players/{ep}/')
         table_paths.append(f'{DATA_PATH}/log/')
         table_paths.append(f'{DATA_PATH}/lines/')
         return table_paths
-
-    
-
 
     def schema_exists(self, schema_name):
         """Check if a schema exists using information_schema."""
@@ -68,77 +72,6 @@ class TableGenerator():
             WHERE schema_name = '{schema_name}'
         """).fetchall()
         return len(result) > 0
-    
-    def create_external_model_all(self, table_name, schema_name, db_name='nba'):
-
-        external_model_file = f"{SQLMESH_PATH}/external_models.yaml"
-        file_exists = os.path.exists(external_model_file)
-        mode = 'a' if file_exists else 'w'
-
-
-        if file_exists:
-            #check for external model
-            with open(external_model_file, 'r') as f:
-                lines = f.readlines()
-                current_table_exist = [x for x in lines if f"""- name: '"{db_name}"."{schema_name}"."{table_name}"'""" in x]
-                if len(current_table_exist):
-                    message = f"TABLE {db_name}.{schema_name}.{table_name} already exists in external_models.yaml"
-                    ### re define table??
-                    return 
-                print(current_table_exist)
-        
-        df = self.conn.execute(f"""
-            SELECT column_name, data_type
-            FROM information_schema.columns
-            WHERE table_name = '{table_name}';
-        """).fetchdf()
-
-        write_string = f"""- name: \'"{db_name}"."{schema_name}"."{table_name}"\'\n  columns:"""
-
-        for col, d_type in zip(df['column_name'],df['data_type']):
-            write_string+=f"\n    {col}: {d_type}"
-        
-        write_string+="\n  gateway: duckdb"
-
-        print(write_string)
-        
-
-        with open(external_model_file, mode) as f2:
-            f2.write(write_string)
-
-        return 1
-
-    def create_external_model(self, table_name, schema_name, db_name='nba'):
-        external_model_file = f"{SQLMESH_PATH}/external_models/{table_name}.yaml"
-        file_exists = os.path.exists(external_model_file)
-        ## ensure location exists
-        os.makedirs(os.path.dirname(external_model_file), exist_ok=True)
-
-        df = self.conn.execute(f"""
-            SELECT column_name, data_type
-            FROM information_schema.columns
-            WHERE table_name = '{table_name}';
-        """).fetchdf()
-
-        if not df.empty:
-
-            write_string = f"""- name: \'"{db_name}"."{schema_name}"."{table_name}"\'\n  columns:"""
-            write_string+="\n  gateway: duckdb"
-
-            for col, d_type in zip(df['column_name'],df['data_type']):
-                write_string+=f"\n    {col}: {d_type}"
-            
-            ## write primary keys too
-            
-            
-            print(write_string)
-            
-
-            with open(external_model_file, mode) as f2:
-                f2.write(write_string)
-        else:
-            self.logger.log_warning()
-
 
 
     def create_table_from_csv(self, current_data_path):
@@ -147,145 +80,77 @@ class TableGenerator():
         if not csv_files:
             self.logger.log_error(f'NO CSV FILES FOUND FOR PATH {current_data_path}')
 
+        # get table and schema
+        csv_split = csv_files[0].split('/')
+        if 'teams' in csv_split or 'players' in csv_split:
+            schema, table_class, table_name = csv_split[-4],csv_split[-3], csv_split[-2]
+        else:
+            schema, table_class, table_name = csv_split[-3],csv_split[-2],'table'
+        full_table_name = f"{schema}.{table_class}_{table_name}"
+
         sample = pd.read_csv(csv_files[0])
-        print(sample.columns)
-        print(sample.dtypes)
+
+        table_creation_statement, external_model_definition = self.create_table_definitions(sample,schema,table_class,table_name)
+
+        file_paths_str = ', '.join([f"'{file}'" for file in csv_files])          
+        insert_statement = f"""
+                        INSERT INTO {full_table_name}
+                        (SELECT * FROM read_csv_auto([{file_paths_str}], union_by_name=true, files_to_sniff=-1));
+                        """
+        try:
+            self.conn.execute(table_creation_statement)
+            self.conn.execute(insert_statement)
+            
+            self.logger.log_info(f"Successfully created and populated {full_table_name} with {len(csv_files)} files.")
+        except Exception as e:
+            self.logger.log_warning(f"Error creating / inserting table {full_table_name}: {e}")
+            return
+        
+        with open(f"{SQLMESH_PATH}/models/external_models/{schema}_{table_class}_{table_name}.yaml", 'w') as f:
+            f.write(external_model_definition)
+        
+
+        return table_creation_statement
+
+    
+    def create_table_definitions(self,sample,schema,table_class,table_name):
+        full_table_name = f"{schema}.{table_class}_{table_name}"
+        table_creation_statement = f"CREATE OR REPLACE TABLE {full_table_name} (\n"
 
         ### FOR COL IN COLUMNS, MAP DTYPES TO DUCKDB TYPES, DEFINE TABLE COLUMNS AND PK's, INSERT FROM READ_CSV_AUTO
 
-        table_creation_statement = "CREATE"
+        table_creation_statement = f"CREATE OR REPLACE TABLE {full_table_name} (\n"
+        external_model_definition = f"""- name: \'"nba"."{schema}"."{table_class}_{table_name}"\'\n  primary_key:"""
+        for pk in PRIMARY_KEYS[table_class]:
+            external_model_definition += f"\n    - {pk}"
+        external_model_definition += f"\n  columns:"
 
-        # for col in sample.columns:
-            
+        cols = sample.columns
+        types = sample.dtypes
+        for col, c_type in zip(cols, types):
+            if 'DATE' in col:
+                table_creation_statement+=f"\t\"{col}\" DATE,\n"
+                external_model_definition+=f"\n    {col}: DATE"
+            # elif col in PRIMARY_KEYS[table_class]:
+            #     table_creation_statement+=f"\t{col} {DATA_TYPE_MAPPINGS[str(c_type)]} PRIMARY KEY,\n"
+            else:
+                table_creation_statement+=f"\t\"{col}\" {DATA_TYPE_MAPPINGS[str(c_type)]},\n"
+                external_model_definition+=f"\n    {col}: {DATA_TYPE_MAPPINGS[str(c_type)]}"
         
+        # table_creation_statement+=f"\tPRIMARY_KEY ({PRIMARY_KEYS[table_class]})"
 
+        table_creation_statement+=f"\n);"
+        external_model_definition+="\n  gateway: duckdb"
 
-
-        try:
-            # Use read_csv_auto to read all CSVs at once (improves efficiency)
-            file_paths_str = ', '.join([f"'{file}'" for file in csv_files])
-            # print(file_paths_str)
-            
-            
-            # self.logger.log_info(f"Successfully created and populated raw.log_table with {len(log_csv_files)} files.")
-        except Exception as e:
-            # self.logger.log_info(f"Error creating log table: {e}")
-            return
-
-
-
-    
-    def create_log_table(self):
-        log_data_path = f"{DATA_PATH}/log/"
-        log_csv_files = glob.glob(f'{log_data_path}*.csv')
-
-        if not log_csv_files:
-            self.logger.log_info(f'create_table_log error: NO FILES in {log_data_path}')
-            return
-        
-        try:
-            # Use read_csv_auto to read all CSVs at once (improves efficiency)
-            file_paths_str = ', '.join([f"'{file}'" for file in log_csv_files])
-            
-            # Load all the CSV files into a single table
-            self.conn.execute(f"""
-                CREATE OR REPLACE TABLE raw.log_table AS
-                (SELECT * FROM read_csv_auto([{file_paths_str}]));
-            """)
-            
-            self.logger.log_info(f"Successfully created and populated raw.log_table with {len(log_csv_files)} files.")
-        except Exception as e:
-            self.logger.log_info(f"Error creating log table: {e}")
-            return
-    
-    def create_line_table(self):
-        line_data_path = f"{BASE_PATH}/app/data/processed/lines/"
-        lines_csv_files = glob.glob(f'{line_data_path}*.csv')
-
-        if not lines_csv_files:
-            self.logger.log_info(f'create_line_table error: NO FILES in {line_data_path}')
-            return
-
-        try:
-            # Use read_csv_auto to read all CSVs at once (improves efficiency)
-            file_paths_str = ', '.join([f"'{file}'" for file in lines_csv_files])
-            
-            # Load all the CSV files into a single table
-            self.conn.execute(f"""
-                CREATE OR REPLACE TABLE raw.lines_table AS
-                SELECT * FROM read_csv_auto([{file_paths_str}])
-                PRIMARY KEY (GAME_ID, TEAM_ABBREVIATION);
-            """)
-
-            self.logger.log_info(f"Successfully created and populated raw.lines_table with {len(lines_csv_files)} files.")
-        except Exception as e:
-            self.logger.log_info(f"Error creating lines table: {e}")
-            return
-    
-    def create_stat_tables(self):
-        # Iterate over 'teams' and 'players' types
-        for tp in ['teams', 'players']:
-            for kind in self.CURRENT_TABLES:
-                try:
-                    # Build the path to the CSV files
-                    current_path = f'{DATA_PATH}/{tp}/{kind}/'
-                    csv_files = glob.glob(f'{current_path}*.csv')
-                    
-                    if not csv_files:
-                        self.logger.log_error(f"create_stat_tables error for {tp}, {kind}: No files in {current_path}")
-                        continue
-                    
-                    # Use read_csv_auto to read all CSVs at once (improves efficiency)
-                    file_paths_str = ', '.join([f"'{file}'" for file in csv_files])
-                    
-                    # Create the table and populate it using all the CSVs in one operation
-                    if tp == 'players':
-                        self.conn.execute(f"""
-                            CREATE OR REPLACE TABLE raw.{tp}_{kind} AS
-                            SELECT * FROM read_csv_auto([{file_paths_str}], union_by_name=true, files_to_sniff=-1)
-                            PRIMARY KEY (GAME_ID, PLAYER_ID);
-                        """)
-                    else:
-                        self.conn.execute(f"""
-                            CREATE OR REPLACE TABLE raw.{tp}_{kind} AS
-                            SELECT * FROM read_csv_auto([{file_paths_str}], union_by_name=true, files_to_sniff=-1)
-                            PRIMARY KEY (GAME_ID, TEAM_ID);
-                        """)
-
-                    self.logger.log_info(f"Successfully created and populated table raw.{tp}_{kind} with {len(csv_files)} files.")
-                    
-                except Exception as e:
-                    self.logger.log_error(f"Error creating table {tp}_{kind}: {e}")
-                    continue  # Continue processing other tables even if this one fails
-                    
-        self.logger.log_info("Finished creating all stat tables.")
-
-    
-    def repopulate_db(self):
-        if not self.schema_exists('raw'):
-            self.conn.execute(f"""
-                CREATE SCHEMA raw;
-                """).df()
-        self.create_log_table()
-        # self.create_line_table()
-        # self.create_stat_tables()
-        self.logger.log_info(f"done repopulating database")
-
+        return table_creation_statement,external_model_definition
 
 
     
 def main():
     logger = Logger()
     new = TableGenerator(logger)
-    print(new.tables_to_create)
-    new.create_table_from_csv(f"{DATA_PATH}/log/")
-    # new.create_log_table()
-
-
-    # new.repopulate_db()
-    # new.create_external_model('teams_misc', 'raw')
-    # sqlmesh.cli.main.create_external_models()
-
+    for pathway in new.tables_to_create:
+        new.create_table_from_csv(pathway)
 
 
 if __name__ == "__main__":

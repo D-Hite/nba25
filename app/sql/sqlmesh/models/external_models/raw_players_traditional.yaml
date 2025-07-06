@@ -1,0 +1,35 @@
+- name: '"nba"."raw"."players_traditional"'
+  primary_key:
+    - GAME_ID
+    - PLAYER_ID
+  columns:
+    GAME_ID: BIGINT
+    TEAM_ID: BIGINT
+    TEAM_ABBREVIATION: TEXT
+    TEAM_CITY: TEXT
+    PLAYER_ID: BIGINT
+    PLAYER_NAME: TEXT
+    NICKNAME: TEXT
+    START_POSITION: TEXT
+    COMMENT: TEXT
+    MIN: TEXT
+    FGM: DOUBLE
+    FGA: DOUBLE
+    FG_PCT: DOUBLE
+    FG3M: DOUBLE
+    FG3A: DOUBLE
+    FG3_PCT: DOUBLE
+    FTM: DOUBLE
+    FTA: DOUBLE
+    FT_PCT: DOUBLE
+    OREB: DOUBLE
+    DREB: DOUBLE
+    REB: DOUBLE
+    AST: DOUBLE
+    STL: DOUBLE
+    BLK: DOUBLE
+    TO: DOUBLE
+    PF: DOUBLE
+    PTS: DOUBLE
+    PLUS_MINUS: DOUBLE
+  gateway: duckdb

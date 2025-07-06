@@ -1,0 +1,24 @@
+- name: '"nba"."raw"."teams_misc"'
+  primary_key:
+    - GAME_ID
+    - TEAM_ID
+  columns:
+    GAME_ID: BIGINT
+    TEAM_ID: BIGINT
+    TEAM_NAME: TEXT
+    TEAM_ABBREVIATION: TEXT
+    TEAM_CITY: TEXT
+    MIN: TEXT
+    PTS_OFF_TOV: DOUBLE
+    PTS_2ND_CHANCE: DOUBLE
+    PTS_FB: DOUBLE
+    PTS_PAINT: DOUBLE
+    OPP_PTS_OFF_TOV: DOUBLE
+    OPP_PTS_2ND_CHANCE: DOUBLE
+    OPP_PTS_FB: DOUBLE
+    OPP_PTS_PAINT: DOUBLE
+    BLK: BIGINT
+    BLKA: BIGINT
+    PF: BIGINT
+    PFD: BIGINT
+  gateway: duckdb
