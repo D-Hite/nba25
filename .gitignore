@@ -12,6 +12,8 @@ app/data/raw/
 app/database/nba.db
 
 treed.txt
+temp*
+sample*
 
 *.log
 .vscode/

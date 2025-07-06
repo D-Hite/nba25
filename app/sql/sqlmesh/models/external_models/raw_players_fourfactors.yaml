@@ -1,4 +1,4 @@
-- name: '"nba"."raw"."players_fourfactors"'
+- name: '"raw"."players_fourfactors"'
   primary_key:
     - GAME_ID
     - PLAYER_ID

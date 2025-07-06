@@ -1,10 +1,10 @@
-- name: '"nba"."raw"."lines_table"'
+- name: '"raw"."lines_table"'
   primary_key:
     - GAME_ID
     - TEAM_ABBREVIATION
   columns:
     GAME_ID: BIGINT
-    GAME_DATE: DATE
+    GAME_DATE: TEXT
     TEAM_ABBREVIATION: TEXT
     LINE: DOUBLE
     OU: DOUBLE

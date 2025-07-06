@@ -1,4 +1,4 @@
-- name: '"nba"."raw"."log_table"'
+- name: '"raw"."log_table"'
   primary_key:
     - GAME_ID
     - TEAM_ID
@@ -8,7 +8,7 @@
     TEAM_ABBREVIATION: TEXT
     TEAM_NAME: TEXT
     GAME_ID: BIGINT
-    GAME_DATE: DATE
+    GAME_DATE: TEXT
     MATCHUP: TEXT
     WL: TEXT
     MIN: BIGINT
