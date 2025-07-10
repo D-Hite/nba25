@@ -28,3 +28,5 @@ class Logger:
     def log_error(self, message):
         caller_function = inspect.stack()[1].function
         self.logger.error(f'Function {caller_function} | {message}')
+
+
