@@ -1,1 +1,5 @@
 sqlmesh --gateway duckdb create_external_models
+
+-- backfilling all tables
+sqlmesh plan --restate-model '*'
+sqlmesh run

@@ -117,6 +117,9 @@ class TableGenerator:
 
             self.conn.execute(insert_statement)
 
+            self.logger.log_sql(table_creation_statement)
+            self.logger.log_sql(insert_statement)
+
 
             self.logger.log_info(f"Successfully created and populated {full_table_name} with {len(csv_files)} files.")
         except Exception as e:

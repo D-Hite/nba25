@@ -36,15 +36,19 @@ class DataFetcher:
         self.logger=logger
 
     def fetch_log(self):
+        try:
         # fetch games for a specific season (reason to separate 002 and 004 is becuase there are other games (non nba games) included in the GameFinder ep)
-        result = ep.leaguegamefinder.LeagueGameFinder(season_nullable=self.season)
-        all_games = result.get_data_frames()[0]
-        rs = all_games[all_games.SEASON_ID == '2' + self.season[:4]]
-        rs = rs[rs.GAME_ID.str[:3] == '002']  # regular season
-        os = all_games[all_games.SEASON_ID == '4' + self.season[:4]]
-        os = os[os.GAME_ID.str[:3] == '004']  # postseason
-        log = pd.concat([rs, os])
-        self.gidset.update(log['GAME_ID'].apply(lambda x: x.zfill(10)))  # Normalize game_id with leading zeros
+            result = ep.leaguegamefinder.LeagueGameFinder(season_nullable=self.season)
+            all_games = result.get_data_frames()[0]
+            rs = all_games[all_games.SEASON_ID == '2' + self.season[:4]]
+            rs = rs[rs.GAME_ID.str[:3] == '002']  # regular season
+            os = all_games[all_games.SEASON_ID == '4' + self.season[:4]]
+            os = os[os.GAME_ID.str[:3] == '004']  # postseason
+            log = pd.concat([rs, os])
+            self.gidset.update(log['GAME_ID'].apply(lambda x: x.zfill(10)))  # Normalize game_id with leading zeros
+        except Exception as e:
+            self.logger.log_error(f"FAILED TO FETCH LOG FOR SEASON {self.season} {e}")
+            return 0
         return log
 
     def fetch_game_data(self, endpoint_name, gid, writer=None):
@@ -110,11 +114,13 @@ class DataWriter:
             if team_table_exist[0][0]:
                 insert_statement = f"""INSERT INTO raw.teams_{endpoint_name} SELECT * FROM tstats"""
                 conn.execute(insert_statement)
+                self.logger.log_sql(insert_statement)
             else:
                 self.logger.log_warning(f"duckdb insert: no table found for: raw.teams_{endpoint_name}")
             if player_table_exist[0][0]:
                 insert_statement = f"""INSERT INTO raw.players_{endpoint_name} SELECT * FROM pstats"""
                 conn.execute(insert_statement)
+                self.logger.log_sql(insert_statement)
             else:
                 self.logger.log_warning(f"duckdb insert: no table found for raw.players_{endpoint_name}")
 
@@ -241,7 +247,8 @@ def update_log(season,logger,log=pd.DataFrame()):
 
 
 def check_data():
-    SEASONS = ['2008-09','2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
+    SEASONS = ['2000-01','2001-02','2002-03','2003-04','2004-05','2005-06','2006-07','2007-08','2008-09','2009-10',
+               '2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
                ,'2020-21','2021-22','2022-23','2023-24','2024-25']
     ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
     logger = Logger()
@@ -299,7 +306,7 @@ def main():
                 logger.log_info(f"Fetching {len(missing_gids)} missing games for {season}, {endpoint}")
                 pstats_buffer = []
                 tstats_buffer = []
-                buffer_size = 10
+                buffer_size = 100
                 count = 0
                 buffers=0
                 for gid in missing_gids:
@@ -342,7 +349,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    check_data()
+    # main()
 
 
     # check_data()
