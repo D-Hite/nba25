@@ -19,6 +19,13 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
 DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
 
+SEASONS = [
+            '2000-01','2001-02','2002-03','2003-04','2004-05','2005-06','2006-07','2007-08','2008-09','2009-10',
+            '2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20',
+            '2020-21','2021-22','2022-23','2023-24','2024-25'
+        ]
+ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
+
 
 class DataFetcher:
     def __init__(self, season, logger, max_retries=3):
@@ -33,6 +40,7 @@ class DataFetcher:
             'traditional': ep.boxscoretraditionalv2.BoxScoreTraditionalV2
         }
         self.gidset = set()  # will be set later
+        self.log = self.fetch_log()
         self.logger=logger
 
     def fetch_log(self):
@@ -44,7 +52,9 @@ class DataFetcher:
             rs = rs[rs.GAME_ID.str[:3] == '002']  # regular season
             os = all_games[all_games.SEASON_ID == '4' + self.season[:4]]
             os = os[os.GAME_ID.str[:3] == '004']  # postseason
-            log = pd.concat([rs, os])
+            nba_cup = all_games[all_games.SEASON_ID == '6' + self.season[:4]]
+            nba_cup = nba_cup[nba_cup.GAME_ID.str[:3] == '006']  # nba cup
+            log = pd.concat([rs, os,nba_cup])
             self.gidset.update(log['GAME_ID'].apply(lambda x: x.zfill(10)))  # Normalize game_id with leading zeros
         except Exception as e:
             self.logger.log_error(f"FAILED TO FETCH LOG FOR SEASON {self.season} {e}")
@@ -214,16 +224,18 @@ class DataChecker:
         # Return the intersection of player_games and team_games
         return player_games & team_games  # Intersection of both sets
 
-def update_log(season,logger,log=pd.DataFrame()):
+def update_log(season,logger,data_fetcher):
     data_path='app/data/raw'
     log_games=set()
     log_file = os.path.join(BASE_PATH, data_path, 'log', f'log{season}.csv')
     if os.path.exists(log_file):
         try:
             # Read the team stats CSV
-            stats = pd.read_csv(log_file, dtype={'GAME_ID': str})
+            current_log = pd.read_csv(log_file, dtype={'GAME_ID': str})
             # Normalize GAME_ID with leading zeros and add to team_games set
-            log_games.update(stats['GAME_ID'].apply(lambda x: x.zfill(10)))
+            log_games.update(current_log['GAME_ID'].apply(lambda x: x.zfill(10)))
+            
+
         except Exception as e:
             print(f"Error reading team stats file: {e}")
     else:
@@ -233,24 +245,65 @@ def update_log(season,logger,log=pd.DataFrame()):
         log.to_csv(log_file, index=False)
         return
         
-    data_fetcher = DataFetcher(season,logger)
-    if log.empty:
-        log = data_fetcher.fetch_log()
+    current_log = data_fetcher.log
+    print(f"{len(log_games)}, {len(data_fetcher.gidset)}")
     missing_gids = data_fetcher.gidset - log_games
 
     if missing_gids:
         logger.log_info(f"LOG_FILE for {season} IS OUT OF DATE, UPDATING")
-        log.to_csv(log_file, index=False)
+        current_log.to_csv(log_file, index=False)
     else:
         logger.log_info(f"log{season}.csv is up to date")    
 
+def update_duckdb():
+    """
+    check files and update duckdb database with missing games
+    """
+    logger = Logger()
+    logger.log_info(f"updating duckdb")
+    try:
+        ###
+        conn = duckdb.connect(f'{DATABASE_PATH}/nba.db')
 
+        for endpoint in ENDPOINTS:
+            team_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'teams_{endpoint}'").fetchall()
+            player_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'players_{endpoint}'").fetchall()
+            if team_table_exist[0][0] and player_table_exist[0][0]:
+                team_games = conn.sql(f"SELECT distinct GAME_ID FROM raw.teams_{endpoint}").df()
+                player_games = conn.sql(f"SELECT distinct GAME_ID FROM raw.teams_{endpoint}").df()
+                player_games.to_csv('sample_gam_id.csv')
+                current_duckdb_games = set(team_games['GAME_ID']) & set(player_games['GAME_ID'])
+
+
+            else:
+                logger.log_error(f"NO {endpoint} table in duckdb {e}")
+                break
+
+            current_file_games = set()
+            for season in SEASONS:
+                checker = DataChecker(season,logger)
+                current_file_games.update(checker.get_processed_games(endpoint))
+            
+            print(f"ENDPOINTS {endpoint} files= {len(current_file_games)}, duckdb={len(current_duckdb_games)}")
+            # print(current_file_games - current_duckdb_games)
+
+
+            ## UPDATE DUCKDB
+
+
+        conn.close()
+    except Exception as e:
+        logger.log_error(f"updating duckdb, {e}")
+        conn.close()
+
+    return 0
 
 def check_data():
-    SEASONS = ['2000-01','2001-02','2002-03','2003-04','2004-05','2005-06','2006-07','2007-08','2008-09','2009-10',
-               '2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
-               ,'2020-21','2021-22','2022-23','2023-24','2024-25']
-    ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
+    """
+    checks most recent log, updates log file
+    reads what is in files to see if they are behind the current log
+    """
+
     logger = Logger()
     logger.log_info(f"\nCHECKING DATA")
 
@@ -259,9 +312,8 @@ def check_data():
 
         # Fetch log data
         data_fetcher = DataFetcher(season,logger)
-        log = data_fetcher.fetch_log()
 
-        update_log(season,logger,log)
+        update_log(season,logger, data_fetcher)
 
         # Data checker for existing files
         checker = DataChecker(season,logger)
@@ -278,9 +330,7 @@ def check_data():
                 
 def main():
     SEASONS = ['2023-24']
-    SEASONS = ['2008-09','2009-10','2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20'
-               ,'2020-21','2021-22','2022-23','2023-24','2024-25']
-    ENDPOINTS = ['traditional','fourfactors','advanced','misc','scoring']
+
 
     # Initialize logger
     logger = Logger()
@@ -349,11 +399,6 @@ def main():
 
 
 if __name__ == "__main__":
-    check_data()
-    # main()
-
-
     # check_data()
-
-    # logger = Logger()
-    # update_log('2024-25',logger)
+    main()
+    # update_duckdb()

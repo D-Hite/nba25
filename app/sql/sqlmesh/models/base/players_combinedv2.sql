@@ -1,0 +1,120 @@
+MODEL (
+  name base.players_combined,
+  kind FULL
+);
+
+SELECT DISTINCT
+    -- 1. Information / Metadata
+    raw.log_table.SEASON_ID,
+    raw.log_table.TEAM_ID,
+    raw.log_table.TEAM_ABBREVIATION,
+    raw.log_table.TEAM_NAME,
+    raw.log_table.GAME_ID,
+    raw.log_table.GAME_DATE,
+    COALESCE(raw.players_fourfactors.TEAM_CITY, raw.players_advanced.TEAM_CITY, raw.players_misc.TEAM_CITY, raw.players_scoring.TEAM_CITY, raw.players_traditional.TEAM_CITY) AS TEAM_CITY,
+    COALESCE(raw.players_fourfactors.PLAYER_ID, raw.players_advanced.PLAYER_ID, raw.players_misc.PLAYER_ID, raw.players_scoring.PLAYER_ID, raw.players_traditional.PLAYER_ID) AS PLAYER_ID,
+    COALESCE(raw.players_fourfactors.PLAYER_NAME, raw.players_advanced.PLAYER_NAME, raw.players_misc.PLAYER_NAME, raw.players_scoring.PLAYER_NAME, raw.players_traditional.PLAYER_NAME) AS PLAYER_NAME,
+    COALESCE(raw.players_fourfactors.NICKNAME, raw.players_advanced.NICKNAME, raw.players_misc.NICKNAME, raw.players_scoring.NICKNAME, raw.players_traditional.NICKNAME) AS NICKNAME,
+    COALESCE(raw.players_fourfactors.START_POSITION, raw.players_advanced.START_POSITION, raw.players_misc.START_POSITION, raw.players_scoring.START_POSITION, raw.players_traditional.START_POSITION) AS START_POSITION,
+    COALESCE(raw.players_fourfactors.COMMENT, raw.players_advanced.COMMENT, raw.players_misc.COMMENT, raw.players_scoring.COMMENT, raw.players_traditional.COMMENT) AS COMMENT,
+    raw.log_table.MATCHUP,
+
+    -- 2. Outcome Stats
+    raw.log_table.WL,
+    raw.players_traditional.PLUS_MINUS,
+
+    -- 3. Core Box Score Stats
+    COALESCE(raw.players_fourfactors.MIN, raw.players_advanced.MIN, raw.players_misc.MIN, raw.players_scoring.MIN, raw.players_traditional.MIN) AS MIN,
+    raw.players_traditional.PTS,
+    raw.players_traditional.FGM,
+    raw.players_traditional.FGA,
+    raw.players_traditional.FG_PCT,
+    raw.players_traditional.FG3M,
+    raw.players_traditional.FG3A,
+    raw.players_traditional.FG3_PCT,
+    raw.players_traditional.FTM,
+    raw.players_traditional.FTA,
+    raw.players_traditional.FT_PCT,
+    raw.players_traditional.OREB,
+    raw.players_traditional.DREB,
+    raw.players_traditional.REB,
+    raw.players_traditional.AST,
+    raw.players_traditional.STL,
+    COALESCE(raw.players_misc.BLK, raw.players_traditional.BLK) AS BLK,
+    COALESCE(raw.players_misc.PF, raw.players_traditional.PF) AS PF,
+    raw.players_traditional.TO,
+
+    -- 4. Advanced Metrics
+    raw.players_advanced.E_OFF_RATING,
+    raw.players_advanced.OFF_RATING,
+    raw.players_advanced.E_DEF_RATING,
+    raw.players_advanced.DEF_RATING,
+    raw.players_advanced.E_NET_RATING,
+    raw.players_advanced.NET_RATING,
+    raw.players_advanced.AST_PCT,
+    raw.players_advanced.AST_TOV,
+    raw.players_advanced.AST_RATIO,
+    COALESCE(raw.players_fourfactors.OREB_PCT, raw.players_advanced.OREB_PCT) AS OREB_PCT,
+    raw.players_advanced.DREB_PCT,
+    raw.players_advanced.REB_PCT,
+    COALESCE(raw.players_fourfactors.TM_TOV_PCT, raw.players_advanced.TM_TOV_PCT) AS TM_TOV_PCT,
+    COALESCE(raw.players_fourfactors.EFG_PCT, raw.players_advanced.EFG_PCT) AS EFG_PCT,
+    raw.players_advanced.TS_PCT,
+    raw.players_advanced.USG_PCT,
+    raw.players_advanced.E_USG_PCT,
+    raw.players_advanced.E_PACE,
+    raw.players_advanced.PACE,
+    raw.players_advanced.PACE_PER40,
+    raw.players_advanced.POSS,
+    raw.players_advanced.PIE,
+
+    -- 5. Misc / Derived Stats
+    raw.players_fourfactors.FTA_RATE,
+    raw.players_fourfactors.OPP_EFG_PCT,
+    raw.players_fourfactors.OPP_FTA_RATE,
+    raw.players_fourfactors.OPP_TOV_PCT,
+    raw.players_fourfactors.OPP_OREB_PCT,
+    raw.players_misc.PTS_OFF_TOV,
+    raw.players_misc.PTS_2ND_CHANCE,
+    raw.players_misc.PTS_FB,
+    raw.players_misc.PTS_PAINT,
+    raw.players_misc.OPP_PTS_OFF_TOV,
+    raw.players_misc.OPP_PTS_2ND_CHANCE,
+    raw.players_misc.OPP_PTS_FB,
+    raw.players_misc.OPP_PTS_PAINT,
+    raw.players_misc.BLKA,
+    raw.players_misc.PFD,
+
+    -- 6. Scoring Percentages
+    raw.players_scoring.PCT_FGA_2PT,
+    raw.players_scoring.PCT_FGA_3PT,
+    raw.players_scoring.PCT_PTS_2PT,
+    raw.players_scoring.PCT_PTS_2PT_MR,
+    raw.players_scoring.PCT_PTS_3PT,
+    raw.players_scoring.PCT_PTS_FB,
+    raw.players_scoring.PCT_PTS_FT,
+    raw.players_scoring.PCT_PTS_OFF_TOV,
+    raw.players_scoring.PCT_PTS_PAINT,
+    raw.players_scoring.PCT_AST_2PM,
+    raw.players_scoring.PCT_UAST_2PM,
+    raw.players_scoring.PCT_AST_3PM,
+    raw.players_scoring.PCT_UAST_3PM,
+    raw.players_scoring.PCT_AST_FGM,
+    raw.players_scoring.PCT_UAST_FGM
+
+FROM raw.log_table
+LEFT JOIN raw.players_traditional
+    ON raw.log_table.GAME_ID::INT = raw.players_traditional.GAME_ID::INT
+    AND raw.log_table.TEAM_ABBREVIATION = raw.players_traditional.TEAM_ABBREVIATION
+LEFT JOIN raw.players_advanced
+    ON raw.players_traditional.GAME_ID::INT = raw.players_advanced.GAME_ID::INT
+    AND raw.players_traditional.PLAYER_NAME = raw.players_advanced.PLAYER_NAME
+LEFT JOIN raw.players_fourfactors
+    ON raw.players_advanced.GAME_ID::INT = raw.players_fourfactors.GAME_ID::INT
+    AND raw.players_advanced.PLAYER_NAME = raw.players_fourfactors.PLAYER_NAME
+LEFT JOIN raw.players_scoring
+    ON raw.players_fourfactors.GAME_ID::INT = raw.players_scoring.GAME_ID::INT
+    AND raw.players_fourfactors.PLAYER_NAME = raw.players_scoring.PLAYER_NAME
+LEFT JOIN raw.players_misc
+    ON raw.players_scoring.GAME_ID::INT = raw.players_misc.GAME_ID::INT
+    AND raw.players_scoring.PLAYER_NAME = raw.players_misc.PLAYER_NAME;
