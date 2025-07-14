@@ -1,5 +1,5 @@
 MODEL (
-  name base.players_sums,
+  name base.player_sums,
   kind FULL
 );
 

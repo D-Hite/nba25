@@ -39,11 +39,13 @@ outcomes AS (
     SELECT
         *,
         CASE 
+            WHEN LINE is NULL then NULL
             WHEN IS_HOME AND SCORE_DIFF > -LINE THEN 'Cover'
             WHEN NOT IS_HOME AND SCORE_DIFF > LINE THEN 'Cover'
             ELSE 'No Cover'
         END AS COVER_RESULT,
-        CASE 
+        CASE
+            WHEN OU IS NULL THEN NULL
             WHEN PTS + OPP_PTS > OU THEN 'Over'
             WHEN PTS + OPP_PTS < OU THEN 'Under'
             ELSE 'Push'
@@ -127,6 +129,7 @@ SELECT
     t1.AWAY_TEAM,
     t1.IS_HOME,
     t1.MATCHUP,
+    t1.GAME_NUMBER,
     t1.LINE,
     t1.OU,
 
