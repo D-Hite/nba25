@@ -97,6 +97,10 @@ class TableGenerator:
             schema, table_class, table_name = csv_split[-3], csv_split[-2], 'table'
 
         full_table_name = f"{schema}.{table_class}_{table_name}"
+        if not self.schema_exists(schema):
+            create_schema = f"CREATE SCHEMA {schema};"
+            self.conn.execute(create_schema)
+            self.logger.log_sql(create_schema)
 
         # Read sample data from the CSV file
         sample = pd.read_csv(csv_files[0])
@@ -162,9 +166,11 @@ class TableGenerator:
 
 def main():
     logger = Logger()
+    logger.log_info(f"MAKING ALL TABLES FROM RAW FILES")
     new = TableGenerator(logger)
     for pathway in new.tables_to_create:
         new.create_table_from_csv(pathway)
+    logger.log_info(f"DONE MAKING {len(new.tables_to_create)} tables")
 
 
 if __name__ == "__main__":

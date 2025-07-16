@@ -8,17 +8,17 @@ SELECT DISTINCT
     COALESCE(
         CAST(raw.log_table.GAME_ID AS VARCHAR),
         CAST(raw.teams_fourfactors.GAME_ID AS VARCHAR),
-        CAST(raw.lines_table.GAME_ID AS VARCHAR),
+        CAST(base.lines_table.GAME_ID AS VARCHAR),
         CAST(raw.teams_advanced.GAME_ID AS VARCHAR),
         CAST(raw.teams_misc.GAME_ID AS VARCHAR),
         CAST(raw.teams_scoring.GAME_ID AS VARCHAR),
         CAST(raw.teams_traditional.GAME_ID AS VARCHAR)
     ) AS GAME_ID,
-    COALESCE(raw.log_table.GAME_DATE, raw.lines_table.GAME_DATE) AS GAME_DATE,
+    COALESCE(raw.log_table.GAME_DATE, base.lines_table.GAME_DATE) AS GAME_DATE,
     COALESCE(
         raw.log_table.TEAM_ABBREVIATION,
         raw.teams_fourfactors.TEAM_ABBREVIATION,
-        raw.lines_table.TEAM_ABBREVIATION,
+        base.lines_table.TEAM_ABBREVIATION,
         raw.teams_advanced.TEAM_ABBREVIATION,
         raw.teams_misc.TEAM_ABBREVIATION,
         raw.teams_scoring.TEAM_ABBREVIATION,
@@ -47,8 +47,8 @@ SELECT DISTINCT
     -- 2. Outcome Stats
     raw.log_table.WL,
     COALESCE(raw.log_table.PLUS_MINUS, raw.teams_traditional.PLUS_MINUS) AS PLUS_MINUS,
-    raw.lines_table.LINE,
-    raw.lines_table.OU,
+    base.lines_table.LINE,
+    base.lines_table.OU,
 
     -- 3. Core Box Score Stats (Numeric)
     COALESCE(CAST(raw.log_table.MIN AS VARCHAR),CAST(raw.teams_fourfactors.MIN AS VARCHAR),CAST(raw.teams_advanced.MIN AS VARCHAR),CAST(raw.teams_misc.MIN AS VARCHAR),CAST(raw.teams_scoring.MIN AS VARCHAR),CAST(raw.teams_traditional.MIN AS VARCHAR)) as MIN,
@@ -147,6 +147,6 @@ LEFT JOIN raw.teams_scoring
 LEFT JOIN raw.teams_misc
     ON raw.log_table.GAME_ID::int = raw.teams_misc.GAME_ID::int
     AND raw.log_table.TEAM_ABBREVIATION = raw.teams_misc.TEAM_ABBREVIATION
-LEFT JOIN raw.lines_table
-    ON raw.log_table.GAME_ID::int = raw.lines_table.GAME_ID::int
-    AND raw.log_table.TEAM_ABBREVIATION = raw.lines_table.TEAM_ABBREVIATION;
+LEFT JOIN base.lines_table
+    ON raw.log_table.GAME_ID::int = base.lines_table.GAME_ID::int
+    AND raw.log_table.TEAM_ABBREVIATION = base.lines_table.TEAM_ABBREVIATION;

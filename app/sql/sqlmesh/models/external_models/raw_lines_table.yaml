@@ -3,9 +3,10 @@
     - GAME_ID
     - TEAM_ABBREVIATION
   columns:
-    GAME_ID: BIGINT
-    GAME_DATE: TEXT
-    TEAM_ABBREVIATION: TEXT
-    LINE: DOUBLE
-    OU: DOUBLE
+    date: BIGINT
+    team: TEXT
+    site: TEXT
+    o:team: TEXT
+    line: DOUBLE
+    total: DOUBLE
   gateway: duckdb
