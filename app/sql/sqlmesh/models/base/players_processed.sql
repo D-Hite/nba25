@@ -14,7 +14,11 @@ WITH player_games AS (
         )
       THEN 1
       ELSE 0
-    END AS PLAYED_FLAG
+    END AS PLAYED_FLAG,
+    LEAD(game_id) OVER (
+      PARTITION BY player_id, season_id
+      ORDER BY game_date
+    ) AS next_game_id
 
   FROM base.players_combined  -- Replace with your actual table name
 
@@ -59,6 +63,7 @@ team_id,
 team_abbreviation,
 team_name,
 game_id,
+NEXT_GAME_ID,
 game_date,
 team_city,
 player_id,

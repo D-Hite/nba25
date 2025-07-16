@@ -8,6 +8,7 @@ SELECT
     SEASON_ID,
     TEAM_ID,
     GAME_ID,
+    NEXT_GAME_ID,
     GAME_DATE,
     PLAYER_NAME,
     TEAM_NAME,

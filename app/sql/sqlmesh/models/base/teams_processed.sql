@@ -57,9 +57,12 @@ ranked_games AS (
     SELECT
         *,
         ROW_NUMBER() OVER (
-            PARTITION BY TEAM_ID, SEASON_ID, SEASON_TYPE 
+            PARTITION BY TEAM_ID, SEASON_ID 
             ORDER BY GAME_DATE
-        ) AS GAME_NUMBER
+        ) AS GAME_NUMBER,
+        MAX(GAME_DATE) OVER (
+            PARTITION BY TEAM_ID, SEASON_ID
+        ) AS LAST_TEAM_GAME_DATE
     FROM outcomes
 ),
 
@@ -118,6 +121,10 @@ vs_opponent_record AS (
 SELECT
     -- 1. Metadata / Identifiers
     t1.GAME_ID,
+    LEAD(t1.game_id) OVER (
+      PARTITION BY t1.season_id, t1.team_id
+      ORDER BY t1.game_date
+    ) AS next_game_id,
     t1.GAME_DATE,
     t1.SEASON_ID,
     t1.SEASON_TYPE,
@@ -130,6 +137,7 @@ SELECT
     t1.IS_HOME,
     t1.MATCHUP,
     t1.GAME_NUMBER,
+    CASE WHEN t1.GAME_DATE = t1.LAST_TEAM_GAME_DATE THEN 1 ELSE 0 END AS IS_LAST_TEAM_GAME,
     t1.LINE,
     t1.OU,
 

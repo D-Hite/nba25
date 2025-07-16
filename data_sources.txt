@@ -1,0 +1,5 @@
+raw line data is from this website:
+https://sportsdatabase.com/NBA/query.html
+
+using this query
+f"date, team, site, o:team, line, total @season={YYYY}"
