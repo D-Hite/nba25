@@ -20,9 +20,12 @@ DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
 DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
 
 SEASONS = [
+            '1990-91','1991-92','1992-93','1993-94','1994-95',
+            '1995-96','1996-97','1997-98','1998-99','1999-00',
             '2000-01','2001-02','2002-03','2003-04','2004-05',
             '2005-06','2006-07','2007-08','2008-09','2009-10',
-            '2010-11','2011-12','2012-13','2013-14','2014-15','2015-16','2016-17','2017-18','2018-19','2019-20',
+            '2010-11','2011-12','2012-13','2013-14','2014-15',
+            '2015-16','2016-17','2017-18','2018-19','2019-20',
             '2020-21','2021-22','2022-23','2023-24','2024-25'
         ]
 ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
@@ -240,10 +243,9 @@ def update_log(season,logger,data_fetcher):
         except Exception as e:
             print(f"Error reading team stats file: {e}")
     else:
-        if log.empty:
-            log = data_fetcher.fetch_log()
+        current_log = data_fetcher.log
         logger.log_info(f"LOG_FILE for {season} IS OUT OF DATE, UPDATING")
-        log.to_csv(log_file, index=False)
+        current_log.to_csv(log_file, index=False)
         return
         
     current_log = data_fetcher.log
@@ -400,6 +402,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # check_data()
-    main()
+    check_data()
+    # main()
     # update_duckdb()
