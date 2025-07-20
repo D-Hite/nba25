@@ -339,7 +339,7 @@ def main():
     logger = Logger()
     logger.log_info(f"\nSTARTING NEW COLLECTION FOR SEASONS {SEASONS}, ENDPOINTS {ENDPOINTS}")
 
-    for season in SEASONS:
+    for season in reversed(SEASONS):
         logger.log_info(f"Starting processing for season {season}")
 
         # Fetch log data
@@ -351,6 +351,10 @@ def main():
 
         # Process data for each endpoint
         for endpoint in ENDPOINTS:
+
+            # if int(season[:4]) < 1999 and endpoint != 'traditional': # CAN ONLY GET TRADITIONAL THIS FAR BACK
+            #     continue
+
             missing_gids = data_fetcher.gidset - checker.get_processed_games(endpoint)
             empties = []
             
@@ -402,6 +406,6 @@ def main():
 
 
 if __name__ == "__main__":
-    check_data()
-    # main()
+    # check_data()
+    main()
     # update_duckdb()
