@@ -2,25 +2,31 @@ MODEL (
     name base.players_processed,
     kind FULL
 );
-
+WITH MINUTE_TABLE AS (
+  SELECT *,
+  CASE WHEN MIN IS NULL THEN '00:00'
+  WHEN MIN = '' THEN '00:00'
+  else MIN end as MINUTES
+  FROM base.players_combined 
+)
 WITH player_games AS (
   SELECT 
     *,
-    CASE 
-      WHEN MIN IS NOT NULL
-        AND (
-          CAST(SPLIT_PART(MIN, ':', 1) AS DOUBLE) > 0 
-          OR CAST(SPLIT_PART(MIN, ':', 2) AS DOUBLE) > 0
-        )
-      THEN 1
-      ELSE 0
-    END AS PLAYED_FLAG,
+CASE 
+  WHEN
+       (
+         TRY_CAST(SPLIT_PART(MINUTES, ':', 1) AS DOUBLE) > 0 
+         OR TRY_CAST(SPLIT_PART(MINUTES, ':', 2) AS DOUBLE) > 0
+       )
+  THEN 1
+  ELSE 0
+END AS PLAYED_FLAG,
     LEAD(game_id) OVER (
       PARTITION BY player_id, season_id
       ORDER BY game_date
     ) AS next_game_id
 
-  FROM base.players_combined  -- Replace with your actual table name
+  FROM MINUTE_TABLE
 
 ),
 
@@ -81,7 +87,11 @@ END AS is_last_game,
 matchup,
 wl,
 plus_minus,
-CASE WHEN MIN IS NULL THEN 0 ELSE CAST(SPLIT_PART(MIN, ':', 1) AS DOUBLE) + CAST(SPLIT_PART(MIN, ':', 2) AS DOUBLE) / 60 END as MINUTES,
+COALESCE(
+  TRY_CAST(SPLIT_PART(MINUTES, ':', 1) AS DOUBLE) 
+  + TRY_CAST(SPLIT_PART(MINUTES, ':', 2) AS DOUBLE) / 60,
+  0
+) AS MINUTES,
 pts,
 fgm,
 fga,

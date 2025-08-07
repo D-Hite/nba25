@@ -1,4 +1,4 @@
-data*/
+# data*/
 venv*/
 log.txt
 
@@ -8,8 +8,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-app/data/raw/
-app/database/nba.db
+app/data/*
+app/database/*
 
 treed.txt
 temp*

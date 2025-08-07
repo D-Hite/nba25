@@ -29,6 +29,7 @@ SEASONS = [
             '2020-21','2021-22','2022-23','2023-24','2024-25'
         ]
 ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
+ENDPOINTS = ['traditional']
 
 
 class DataFetcher:
@@ -44,8 +45,9 @@ class DataFetcher:
             'traditional': ep.boxscoretraditionalv2.BoxScoreTraditionalV2
         }
         self.gidset = set()  # will be set later
-        self.log = self.fetch_log()
         self.logger=logger
+        self.log = self.fetch_log()
+        
 
     def fetch_log(self):
         try:
@@ -61,8 +63,11 @@ class DataFetcher:
             log = pd.concat([rs, os,nba_cup])
             self.gidset.update(log['GAME_ID'].apply(lambda x: x.zfill(10)))  # Normalize game_id with leading zeros
         except Exception as e:
-            self.logger.log_error(f"FAILED TO FETCH LOG FOR SEASON {self.season} {e}")
-            return 0
+            self.logger.log_error(f"FAILED TO FETCH LOG FOR SEASON, attempting to read local log {self.season} {e}")
+            log_path = os.path.join(DATA_PATH,'log',f'log{self.season}.csv')
+            log = pd.read_csv(log_path, dtype={'GAME_ID': str})
+            self.gidset.update(log['GAME_ID'].apply(lambda x: x.zfill(10)))
+
         return log
 
     def fetch_game_data(self, endpoint_name, gid, writer=None):
@@ -261,6 +266,7 @@ def update_log(season,logger,data_fetcher):
 def update_duckdb():
     """
     check files and update duckdb database with missing games
+    TODO
     """
     logger = Logger()
     logger.log_info(f"updating duckdb")
@@ -318,7 +324,6 @@ def check_data():
 
         update_log(season,logger, data_fetcher)
 
-        # Data checker for existing files
         checker = DataChecker(season,logger)
 
         # Process data for each endpoint
@@ -344,7 +349,6 @@ def main():
 
         # Fetch log data
         data_fetcher = DataFetcher(season,logger)
-        log = data_fetcher.fetch_log()
 
         # Data checker for existing files
         checker = DataChecker(season, logger)

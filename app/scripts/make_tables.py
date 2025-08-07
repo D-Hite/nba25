@@ -112,7 +112,7 @@ class TableGenerator:
         file_paths_str = ', '.join([f"'{file}'" for file in csv_files])
         insert_statement = f"""
             INSERT INTO {full_table_name}
-            (SELECT * FROM read_csv_auto([{file_paths_str}], union_by_name=true, files_to_sniff=-1));
+            (SELECT * FROM read_csv_auto([{file_paths_str}], union_by_name=true, files_to_sniff=-1,nullstr=''));
         """
 
         try:
