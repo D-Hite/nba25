@@ -1,5 +1,5 @@
 MODEL (
-  name base.player_averages,
+  name aggs.player_averages,
   kind FULL
 );
 SELECT

@@ -108,13 +108,13 @@ LEFT JOIN raw.players_traditional
     AND raw.log_table.TEAM_ABBREVIATION = raw.players_traditional.TEAM_ABBREVIATION
 LEFT JOIN raw.players_advanced
     ON raw.players_traditional.GAME_ID::INT = raw.players_advanced.GAME_ID::INT
-    AND raw.players_traditional.PLAYER_NAME = raw.players_advanced.PLAYER_NAME
+    AND raw.players_traditional.PLAYER_ID = raw.players_advanced.PLAYER_ID
 LEFT JOIN raw.players_fourfactors
     ON raw.players_advanced.GAME_ID::INT = raw.players_fourfactors.GAME_ID::INT
-    AND raw.players_advanced.PLAYER_NAME = raw.players_fourfactors.PLAYER_NAME
+    AND raw.players_advanced.PLAYER_ID = raw.players_fourfactors.PLAYER_ID
 LEFT JOIN raw.players_scoring
     ON raw.players_fourfactors.GAME_ID::INT = raw.players_scoring.GAME_ID::INT
-    AND raw.players_fourfactors.PLAYER_NAME = raw.players_scoring.PLAYER_NAME
+    AND raw.players_fourfactors.PLAYER_ID = raw.players_scoring.PLAYER_ID
 LEFT JOIN raw.players_misc
     ON raw.players_scoring.GAME_ID::INT = raw.players_misc.GAME_ID::INT
-    AND raw.players_scoring.PLAYER_NAME = raw.players_misc.PLAYER_NAME;
+    AND raw.players_scoring.PLAYER_ID = raw.players_misc.PLAYER_ID;

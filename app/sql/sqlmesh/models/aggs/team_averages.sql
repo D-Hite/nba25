@@ -1,5 +1,5 @@
 MODEL (
-  name base.team_averages,
+  name aggs.team_averages,
   kind FULL
 );
 

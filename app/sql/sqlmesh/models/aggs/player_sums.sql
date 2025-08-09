@@ -1,5 +1,5 @@
 MODEL (
-  name base.player_sums,
+  name aggs.player_sums,
   kind FULL
 );
 
@@ -25,7 +25,7 @@ SELECT
         PARTITION BY PLAYER_ID, SEASON_ID
         ORDER BY CAST(GAME_DATE AS DATE)
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-    ) AS CUM_MINUTES,
+    ) AS MINUTES_CUMULATIVE,
 
     -- Cumulative Points
 
@@ -34,182 +34,182 @@ SUM(PTS) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PTS,
+            ) AS PTS_CUMULATIVE,
         
         
 SUM(AST) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_AST,
+            ) AS AST_CUMULATIVE,
         
         
 SUM(REB) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_REB,
+            ) AS REB_CUMULATIVE,
         
         
 SUM(OREB) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_OREB,
+            ) AS OREB_CUMULATIVE,
         
         
 SUM(DREB) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_DREB,
+            ) AS DREB_CUMULATIVE,
         
         
 SUM(STL) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_STL,
+            ) AS STL_CUMULATIVE,
         
         
 SUM(BLK) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_BLK,
+            ) AS BLK_CUMULATIVE,
         
         
 SUM(PF) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PF,
+            ) AS PF_CUMULATIVE,
 
 
 SUM("TO") OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_TO,
+            ) AS TO_CUMULATIVE,
         
         
 SUM(FGM) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FGM,
+            ) AS FGM_CUMULATIVE,
         
         
 SUM(FGA) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FGA,
+            ) AS FGA_CUMULATIVE,
         
         
 SUM(FG3M) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FG3M,
+            ) AS FG3M_CUMULATIVE,
         
         
 SUM(FG3A) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FG3A,
+            ) AS FG3A_CUMULATIVE,
         
         
 SUM(FTM) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FTM,
+            ) AS FTM_CUMULATIVE,
         
         
 SUM(FTA) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_FTA,
+            ) AS FTA_CUMULATIVE,
         
         
 SUM(PLUS_MINUS) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PLUS_MINUS,
+            ) AS PLUS_MINUS_CUMULATIVE,
         
         
 SUM(PTS_OFF_TOV) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PTS_OFF_TOV,
+            ) AS PTS_OFF_TOV_CUMULATIVE,
         
         
 SUM(PTS_2ND_CHANCE) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PTS_2ND_CHANCE,
+            ) AS PTS_2ND_CHANCE_CUMULATIVE,
         
         
 SUM(PTS_FB) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PTS_FB,
+            ) AS PTS_FB_CUMULATIVE,
         
         
 SUM(PTS_PAINT) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PTS_PAINT,
+            ) AS PTS_PAINT_CUMULATIVE,
         
         
 SUM(OPP_PTS_OFF_TOV) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_OPP_PTS_OFF_TOV,
+            ) AS OPP_PTS_OFF_TOV_CUMULATIVE,
         
         
 SUM(OPP_PTS_2ND_CHANCE) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_OPP_PTS_2ND_CHANCE,
+            ) AS OPP_PTS_2ND_CHANCE_CUMULATIVE,
         
         
 SUM(OPP_PTS_FB) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_OPP_PTS_FB,
+            ) AS OPP_PTS_FB_CUMULATIVE,
         
         
 SUM(OPP_PTS_PAINT) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_OPP_PTS_PAINT,
+            ) AS OPP_PTS_PAINT_CUMULATIVE,
         
         
 SUM(BLKA) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_BLKA,
+            ) AS BLKA_CUMULATIVE,
         
         
 SUM(PFD) OVER (
                 PARTITION BY PLAYER_ID, SEASON_ID
                 ORDER BY CAST(GAME_DATE AS DATE)
                 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-            ) AS CUM_PFD,
+            ) AS PFD_CUMULATIVE,
         
 
 FROM base.players_processed
