@@ -2,3 +2,4 @@ duckdb
 pandas
 nba_api
 sqlmesh
+matplotlib

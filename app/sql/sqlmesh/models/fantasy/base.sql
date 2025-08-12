@@ -1,0 +1,31 @@
+MODEL (
+  name fantasy.base_data,
+  kind FULL,
+  description "fantasy basketball stats"
+);
+SELECT
+  SEASON_ID,
+  GAME_ID,
+  GAME_DATE,
+  PLAYER_NAME,
+  PLAYER_ID,
+  PLAYED_FLAG,
+  IS_LAST_GAME,
+  MINUTES,
+  PTS AS POINTS,
+  AST AS ASSISTS,
+  STL AS STEALS,
+  BLK AS BLOCKS,
+  REB AS REBOUNDS,
+  FG3M as THREES,
+  EFG_PCT,
+  CASE WHEN FTA = 0 THEN NULL ELSE FT_PCT END as FT_PCT,
+  CASE WHEN 
+    PTS >= 10 AND (AST >= 10 OR BLK >= 10 OR STL >= 10 OR REB >= 10)
+    OR AST >= 10 AND (BLK >= 10 OR STL >= 10 OR REB >= 10)
+    OR REB >= 10 AND (BLK >= 10 OR STL >= 10 OR AST >= 10)
+  THEN 1
+  ELSE 0
+  END AS DOUBLE_DOUBLE
+    
+FROM BASE.players_processed
