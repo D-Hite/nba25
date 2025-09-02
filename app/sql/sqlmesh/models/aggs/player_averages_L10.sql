@@ -1,0 +1,946 @@
+MODEL (
+  name aggs.player_averages_last_10,
+  kind FULL
+);
+SELECT
+    PLAYER_ID,
+    SEASON_ID,
+    TEAM_ID,
+    GAME_ID,
+    NEXT_GAME_ID,
+    GAME_DATE,
+    PLAYER_NAME,
+    TEAM_NAME,
+    TEAM_ABBREVIATION,
+    GAME_COUNT,
+    GAMES_PLAYED,
+    PLAYED_FLAG,
+    IS_LAST_GAME,
+
+    -- Cumulative Games Played (with minutes)
+
+    AVG(
+      CASE 
+            WHEN PLAYED_FLAG = 1 THEN MINUTES
+            ELSE NULL 
+        END
+    ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+    ) AS AVG_MINUTES,
+
+    -- Cumulative Averages (from temp/player_cols2.csv)
+        
+
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PLUS_MINUS 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PLUS_MINUS,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PTS 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PTS,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FGM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FGM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FGA 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FGA,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FG_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FG_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FG3M 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FG3M,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FG3A 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FG3A,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FG3_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FG3_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FTM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FTM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FTA 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FTA,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FT_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FT_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OREB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OREB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN DREB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_DREB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN REB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_REB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN AST 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_AST,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN STL 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_STL,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN BLK 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_BLK,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PF 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PF,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN E_OFF_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_E_OFF_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OFF_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OFF_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN E_DEF_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_E_DEF_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN DEF_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_DEF_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN E_NET_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_E_NET_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN NET_RATING 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_NET_RATING,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN AST_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_AST_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN AST_TOV 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_AST_TOV,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN AST_RATIO 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_AST_RATIO,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OREB_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OREB_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN DREB_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_DREB_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN REB_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_REB_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN TM_TOV_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_TM_TOV_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN EFG_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_EFG_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN TS_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_TS_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN USG_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_USG_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN E_USG_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_E_USG_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN E_PACE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_E_PACE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PACE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PACE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PACE_PER40 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PACE_PER40,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN POSS 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_POSS,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PIE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PIE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN FTA_RATE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_FTA_RATE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_EFG_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_EFG_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_FTA_RATE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_FTA_RATE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_TOV_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_TOV_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_OREB_PCT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_OREB_PCT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PTS_OFF_TOV 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PTS_OFF_TOV,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PTS_2ND_CHANCE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PTS_2ND_CHANCE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PTS_FB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PTS_FB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PTS_PAINT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PTS_PAINT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_PTS_OFF_TOV 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_PTS_OFF_TOV,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_PTS_2ND_CHANCE 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_PTS_2ND_CHANCE,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_PTS_FB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_PTS_FB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN OPP_PTS_PAINT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_OPP_PTS_PAINT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN BLKA 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_BLKA,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PFD 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PFD,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_FGA_2PT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_FGA_2PT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_FGA_3PT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_FGA_3PT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_2PT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_2PT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_2PT_MR 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_2PT_MR,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_3PT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_3PT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_FB 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_FB,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_FT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_FT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_OFF_TOV 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_OFF_TOV,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_PTS_PAINT 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_PTS_PAINT,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_AST_2PM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_AST_2PM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_UAST_2PM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_UAST_2PM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_AST_3PM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_AST_3PM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_UAST_3PM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_UAST_3PM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_AST_FGM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_AST_FGM,
+
+        
+
+		AVG(
+        CASE 
+            WHEN PLAYED_FLAG = 1 THEN PCT_UAST_FGM 
+            ELSE NULL 
+        END
+        ) OVER (
+        PARTITION BY PLAYER_ID, SEASON_ID
+        ORDER BY CAST(GAME_DATE AS DATE)
+        ROWS BETWEEN 9 PRECEDING AND CURRENT ROW
+        ) AS AVG_PCT_UAST_FGM
+
+        
+FROM base.players_processed;
