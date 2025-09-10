@@ -1,28 +1,29 @@
-# data*/
 venv*/
+
 log.txt
+*.log
 
-
-# Ignore compiled Python files
 __pycache__/
 *.pyc
 *.pyo
+*.egg
+*.dist-info/
 
-app/data/*
-app/database/*
-
-app/fantasy/*
-
-treed.txt
-temp*
-sample*
-
-*.log
 .vscode/
 .idea/
 .ipynb_checkpoints/
 
-*.egg
-*.dist-info/
+*.zip
+
+
+app/data/*
+app/database/*
+app/fantasy/*
+
+tree.sh
+treed.txt
+temp*
+sample*
+
 
 !.gitignore

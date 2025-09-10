@@ -19,6 +19,8 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 DATA_PATH = os.path.join(BASE_PATH,  'app','data', 'raw')
 DATABASE_PATH = os.path.join(BASE_PATH, 'app','database')
 
+
+
 SEASONS = [
             '1990-91','1991-92','1992-93','1993-94','1994-95',
             '1995-96','1996-97','1997-98','1998-99','1999-00',
@@ -29,7 +31,7 @@ SEASONS = [
             '2020-21','2021-22','2022-23','2023-24','2024-25'
         ]
 ENDPOINTS = ['advanced','fourfactors','misc','scoring','traditional']
-ENDPOINTS = ['traditional']
+
 
 
 class DataFetcher:
@@ -263,49 +265,6 @@ def update_log(season,logger,data_fetcher):
     else:
         logger.log_info(f"log{season}.csv is up to date")    
 
-def update_duckdb():
-    """
-    check files and update duckdb database with missing games
-    TODO
-    """
-    logger = Logger()
-    logger.log_info(f"updating duckdb")
-    try:
-        ###
-        conn = duckdb.connect(f'{DATABASE_PATH}/nba.db')
-
-        for endpoint in ENDPOINTS:
-            team_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'teams_{endpoint}'").fetchall()
-            player_table_exist = conn.sql(f"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'raw' and TABLE_NAME = 'players_{endpoint}'").fetchall()
-            if team_table_exist[0][0] and player_table_exist[0][0]:
-                team_games = conn.sql(f"SELECT distinct GAME_ID FROM raw.teams_{endpoint}").df()
-                player_games = conn.sql(f"SELECT distinct GAME_ID FROM raw.teams_{endpoint}").df()
-                player_games.to_csv('sample_gam_id.csv')
-                current_duckdb_games = set(team_games['GAME_ID']) & set(player_games['GAME_ID'])
-
-
-            else:
-                logger.log_error(f"NO {endpoint} table in duckdb {e}")
-                break
-
-            current_file_games = set()
-            for season in SEASONS:
-                checker = DataChecker(season,logger)
-                current_file_games.update(checker.get_processed_games(endpoint))
-            
-            print(f"ENDPOINTS {endpoint} files= {len(current_file_games)}, duckdb={len(current_duckdb_games)}")
-            # print(current_file_games - current_duckdb_games)
-
-
-            ## UPDATE DUCKDB
-
-
-        conn.close()
-    except Exception as e:
-        logger.log_error(f"updating duckdb, {e}")
-        conn.close()
-
-    return 0
 
 def check_data():
     """
@@ -356,8 +315,8 @@ def main():
         # Process data for each endpoint
         for endpoint in ENDPOINTS:
 
-            # if int(season[:4]) < 1999 and endpoint != 'traditional': # CAN ONLY GET TRADITIONAL THIS FAR BACK
-            #     continue
+            if int(season[:4]) < 1996 and endpoint != 'traditional': # CAN ONLY GET TRADITIONAL THIS FAR BACK
+                continue
 
             missing_gids = data_fetcher.gidset - checker.get_processed_games(endpoint)
             empties = []
@@ -412,4 +371,3 @@ def main():
 if __name__ == "__main__":
     # check_data()
     main()
-    # update_duckdb()

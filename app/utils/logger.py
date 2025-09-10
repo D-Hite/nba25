@@ -3,7 +3,7 @@ import inspect
 
 
 class Logger:
-    def __init__(self, log_file='log.log', sql_log_file='sql.log'):
+    def __init__(self, log_file='logs/log.log', sql_log_file='logs/sql.log'):
         self.logger = logging.getLogger('StatLogger')
         self.logger.setLevel(logging.INFO)
         self.log_file = log_file
