@@ -20,7 +20,7 @@ app/data/*
 app/database/*
 app/fantasy/*
 
-tree.sh
+*.sh
 treed.txt
 temp*
 sample*
