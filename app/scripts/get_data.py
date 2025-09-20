@@ -44,7 +44,8 @@ class DataFetcher:
             'misc': ep.boxscoremiscv2.BoxScoreMiscV2,
             'scoring': ep.boxscorescoringv2.BoxScoreScoringV2,
             'summary': ep.boxscoresummaryv2.BoxScoreSummaryV2,
-            'traditional': ep.boxscoretraditionalv2.BoxScoreTraditionalV2
+            'traditional': ep.boxscoretraditionalv2.BoxScoreTraditionalV2,
+            'matchups':ep.boxscorematchupsv3.BoxScoreMatchupsV3
         }
         self.gidset = set()  # will be set later
         self.logger=logger

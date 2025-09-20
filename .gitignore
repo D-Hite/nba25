@@ -20,10 +20,13 @@ app/data/*
 app/database/*
 app/fantasy/*
 
+app/model/data/*
+
 *.sh
 treed.txt
 temp*
 sample*
+test*
 
 
 !.gitignore

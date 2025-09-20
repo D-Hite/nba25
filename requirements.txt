@@ -5,3 +5,4 @@ sqlmesh
 matplotlib
 torch
 torch-geometric
+scikit-learn

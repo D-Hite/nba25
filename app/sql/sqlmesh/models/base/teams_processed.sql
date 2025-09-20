@@ -62,9 +62,58 @@ ranked_games AS (
         ) AS GAME_NUMBER,
         MAX(GAME_DATE) OVER (
             PARTITION BY TEAM_ID, SEASON_ID
-        ) AS LAST_TEAM_GAME_DATE
-    FROM outcomes
+        ) AS LAST_TEAM_GAME_DATE,
+
+        -- Days since last game
+        DATE_DIFF(
+            'day',
+            CAST(LAG(GAME_DATE) OVER (
+                PARTITION BY TEAM_ID, SEASON_ID
+                ORDER BY GAME_DATE
+            ) AS DATE),
+            CAST(GAME_DATE AS DATE)
+        ) AS DAYS_SINCE_LAST_GAME,
+
+
+        -- Back-to-back flag
+        CASE 
+            WHEN DATE_DIFF(
+                'day',
+                CAST(LAG(GAME_DATE) OVER (
+                    PARTITION BY TEAM_ID, SEASON_ID
+                    ORDER BY GAME_DATE
+                ) AS DATE),
+                CAST(GAME_DATE AS DATE)
+            ) = 1 THEN 1 ELSE 0
+        END AS IS_BACK_TO_BACK,
+
+
+        -- 3 games in 4 nights
+        (
+            SELECT COUNT(*)
+            FROM outcomes o2
+            WHERE o2.TEAM_ID = o1.TEAM_ID
+            AND o2.SEASON_ID = o1.SEASON_ID
+            AND CAST(o2.GAME_DATE AS DATE) 
+                BETWEEN (CAST(o1.GAME_DATE AS DATE) - INTERVAL 3 DAY) 
+                    AND CAST(o1.GAME_DATE AS DATE)
+        ) AS GAMES_LAST_4_DAYS,
+
+        (
+            SELECT COUNT(*)
+            FROM outcomes o3
+            WHERE o3.TEAM_ID = o1.TEAM_ID
+            AND o3.SEASON_ID = o1.SEASON_ID
+            AND CAST(o3.GAME_DATE AS DATE) 
+                BETWEEN (CAST(o1.GAME_DATE AS DATE) - INTERVAL 5 DAY) 
+                    AND CAST(o1.GAME_DATE AS DATE)
+        ) AS GAMES_LAST_6_DAYS
+
+
+    FROM outcomes o1
 ),
+
+
 
 record_agg AS (
     SELECT
@@ -98,7 +147,7 @@ record_agg AS (
         ) AS LAST_10_WIN_PCT
     FROM ranked_games
 ),
-
+-- THIS MAY NEED WORK:: TODO
 vs_opponent_record AS (
     SELECT
         r.TEAM_ID,
@@ -137,6 +186,10 @@ SELECT
     t1.IS_HOME,
     t1.MATCHUP,
     t1.GAME_NUMBER,
+    t1.DAYS_SINCE_LAST_GAME,
+    t1.IS_BACK_TO_BACK,
+    CASE WHEN t1.GAMES_LAST_4_DAYS >= 3 THEN 1 ELSE 0 END AS IS_3_IN_4,
+    CASE WHEN t1.GAMES_LAST_6_DAYS >= 4 THEN 1 ELSE 0 END AS IS_4_IN_6,
     CASE WHEN t1.GAME_DATE = t1.LAST_TEAM_GAME_DATE THEN 1 ELSE 0 END AS IS_LAST_TEAM_GAME,
     t1.LINE,
     t1.OU,
